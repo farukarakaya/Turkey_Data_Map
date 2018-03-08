@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html
+xmlns="http://www.w3.org/1999/xhtml"
+xmlns:f="http://java.sun.com/jsf/core"
+xmlns:p="http://primefaces.org/ui"
+xmlns:h="http://java.sun.com/jsf/html">
+<head>
+    <meta charset="utf-8"></meta>
+    <meta name="viewport" content="width=device-width"></meta>
+    <title>Choropleth with auto-calculated color (Highmaps)</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css"></link>
+    <style>
+        #container1 { border:1px dotted blue; width: 900px; height: 400px; position: relative; }
+    </style>
+</head>
+<h:body>
+<h1>Deneme</h1>
+<div id="container1">
+<script>
+    var mapdata = '#{navigator.arr}';
+</script>
+
+<script type="text/javascript" src="js/d3.js"></script>
+<script type="text/javascript" src="js/topojson.js"></script>
+<script type="text/javascript" src="js/ilcelerdatamaps.tur.js"></script>
+<script type="text/javascript" src="js/ilcelerharita.js"></script>
+    <!-- import JavaScript -->
+
+
+</div>
+
+</h:body>
+</html>

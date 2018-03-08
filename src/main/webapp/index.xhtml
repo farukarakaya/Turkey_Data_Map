@@ -1,0 +1,222 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+
+    <style>
+        #container2 {width: 450px; height: 450px;}
+        #container1 {width: 65%; height: 600px; position: relative; float: left }
+        #rightbar { width: 35%; float: left;}
+        #menubar{margin-top: 20px;}
+        #header{width: 100%; height: 120px; background-image: url("images/header_repeat.png"); background-repeat: repeat-x; }
+    </style>
+    <div id="header">
+        <img src="images/Türksat_logo_small.png" style="height:110px;"/>
+    </div>
+</h:head>
+
+<body >
+<h:panelGrid columns="18" id="menubar" style="margin-bottom: 10px">
+    <p:outputLabel for="takvim2" value="Başlangıç Tarihi: " />
+    <p:calendar id="takvim1" value="#{filterMenu.date1}"  pattern="dd-MM-yyyy" mask="true" size="8"/>
+    <p:spacer width="5" height="10" />
+
+    <p:outputLabel for="takvim2" value="Bitiş Tarihi: " />
+    <p:calendar id="takvim2" value="#{filterMenu.date2}" pattern="dd-MM-yyyy" mask="true" size="8" />
+    <p:spacer width="5" height="10" />
+
+    <p:outputLabel for="takvim2" value="İl Fitresi:" />
+    <p:selectOneMenu id="ilFiltresi" value="#{filterMenu.ilFiltresi}" style="width:100px;" placeholder="Tüm İller">
+        <f:selectItems value="#{filterMenu.iller}" var="il" itemLabel="#{il.name}" itemValue="^#{il}" />
+        <f:ajax onevent="PF('ilceFiltresi').enable()"/>
+    </p:selectOneMenu>
+    <p:spacer width="5" height="10" />
+
+    <p:outputLabel for="takvim2" value="İlçe Filtresi:" />
+    <p:selectOneMenu widgetVar="ilceFiltresi" id="ilceFiltresi" value="#{filterMenu.ilceFiltresi}" style="width:100px" disabled="true" placeholder="Tüm İlçeler">
+        <f:selectItems value="#{filterMenu.ilceler}" var="ilce" itemLabel="#{ilce.name}" itemValue="^#{ilce}" />
+    </p:selectOneMenu>
+    <p:spacer width="5" height="10" />
+
+    <p:outputLabel for="takvim2" value="Konu Fitresi:" />
+    <p:selectOneMenu id="konuFiltresi" value="#{filterMenu.ilFiltresi}" style="width:100px" placeholder="Tüm Konular">
+        <f:selectItems value="#{filterMenu.konular}" var="konu" itemLabel="#{konu.name}" itemValue="^#{konu}" />
+    </p:selectOneMenu>
+    <p:spacer width="5" height="10" />
+
+
+    <p:commandButton style="width: 160px;" value="Filtreyi Uygula" id="filtre1" update="" actionListener="#{filterMenu.buttonAction}" styleClass="ui-priority-primary" />
+    <p:spacer width="5" height="10" />
+
+    <p:commandButton style="width: 160px;" value="Filtreyi Sıfırla" id="filtre0" update="" actionListener="#{filterMenu.buttonAction}" styleClass="ui-priority-primary" />
+    <p:spacer width="5" height="10" />
+
+</h:panelGrid>
+
+<h:form id="container1">
+    <p:remoteCommand name="passToClickedId"
+    action="#{navigator.remoteAction()}"
+    id="remoteIl" process="@this" update=":rightbar:tabView:ilcetab rightbar:tabView:konutab"/>
+
+    <p:remoteCommand name="passToDblClickedId"
+    action="#{navigator.remoteDblAction()}"
+    id="remoteDblClickedIl" process="@this" update="container1:ilceMap" oncomplete="PF('ilceMap').show();"/>
+
+
+        <script type="text/javascript" src="js/d3.js"/>
+        <script type="text/javascript" src="js/topojson.js"/>
+
+        <script type="text/javascript" >
+    var mapdata = '#{navigator.arr}';
+    //console.log(mapdata);
+
+    function chooseCity() {
+        if( clickedID !== null &amp;&amp;  PF('tab').getLength() ===3 ){
+            PF('tab').remove(0);
+            PF('tab').select(0);
+        }
+        PF('tab').disable(0);
+        PF('tab').disable(1);
+        PF('tab').enable(0);
+        PF('tab').enable(1);
+
+    }
+    function showTab(index) {
+        PF('tab').select(index);
+    }
+    function setDblClickedNull (){};
+
+</script>
+
+
+
+    <h:panelGroup layout="block" >
+        <div id="container" style="width:95% ;height:95%;">
+            <script type="text/javascript" src="js/datamaps.tur.js"/>
+            <script type="text/javascript" src="js/harita.js"/>
+        </div>
+    </h:panelGroup>
+
+    <p:dialog id="ilceMap"  widgetVar="ilceMap" header="#{navigator.dblClickedCity}"
+              draggable="false" showEffect="drop" hideEffect="drop"
+              onHide="jQuery('#someId').hide();" onShow="jQuery('#someId').show();"
+              dynamic="true" closeOnEscape="true" resizable="false" position="150,250">
+        <h:panelGroup layout="block" id="cont">
+            <div id="container2">
+                <script type="text/javascript" src="js/ilcelerdatamaps.tur.js"/>
+                <script type="text/javascript" src="js/ilcelerharita.js"/>
+            </div>
+        </h:panelGroup>
+    </p:dialog>
+
+</h:form>
+
+<h:form id="rightbar" >
+
+   <p:tabView id= "tabView" widgetVar="tab" activeIndex="0" dynamic="true"  >
+        <p:tab title="Merhaba">
+            İlçeleri ve konuları görmek için il seçiniz.
+        </p:tab>
+        <p:tab title="İlçeler" disabled="true" >
+
+            <p:dataTable id="ilcetab" var="ilce" value="#{ilcelerView.ilceler}"
+                         scrollable="true" scrollHeight="400"
+                         rowKey="#{ilce.name}">
+                <f:facet name="header">
+                    #{navigator.currentCity}
+                </f:facet>
+                <p:column headerText="İlçe Adı" sortBy="#{ilce.name}">
+                    <h:outputText value="#{ilce.name}" />
+                </p:column>
+                <p:column headerText="Toplam Evrak" sortBy="#{ilce.value}">
+                    <h:outputText value="#{ilce.value}" />
+                </p:column>
+                <p:column>
+                    <p:commandButton update=":rightbar:ilceDetail" oncomplete="PF('ilceDialog').show()" icon="ui-icon-search" title="View">
+                        <f:setPropertyActionListener value="#{ilce}" target="#{ilcelerView.selectedIlce}" />
+                    </p:commandButton>
+                </p:column>
+
+            </p:dataTable>
+
+        </p:tab>
+        <p:tab id="tab2" title="Konular" disabled="true">
+
+            <p:dataTable id="konutab" var="konu" value="#{konularView.konular}"
+                         scrollable="true" scrollHeight="400" >
+                <f:facet name="header">
+                    #{ilcelerView.konularLokasyon}
+                </f:facet>
+                <p:column headerText="Konu Başlığı" sortBy="#{konu.name}">
+                    <h:outputText value="#{konu.name}" />
+                </p:column>
+                <p:column headerText="Evrak Sayısı" sortBy="#{konu.value}">
+                    <h:outputText value="#{konu.value}" />
+                </p:column>
+                <p:column>
+                    <p:commandButton update=":rightbar:konuDetail" oncomplete="PF('konuDialog').show()" icon="ui-icon-search" title="View">
+                        <f:setPropertyActionListener value="#{ilce}" target="#{ilcelerView.selectedIlce}" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+        </p:tab>
+
+    </p:tabView>
+
+    <p:dialog header="#{navigator.currentCity}" widgetVar="ilceDialog" modal="true" showEffect="fade" hideEffect="fade" resizable="false" >
+        <p:dataTable id="ilceDetail" var="evrak" value="#{evraklarView.seciliIlceninEvraklari}" scrollable="true"
+            scrollHeight="500" style="width:800">
+
+            <p:column headerText="Tarih" sortBy="#{evrak.name}" >
+                <h:outputText value="#{evrak.name}" />
+            </p:column>
+            <p:column headerText="Konu" sortBy="#{evrak.name}">
+                <h:outputText value="#{evrak.name}" />
+            </p:column>
+            <p:column headerText="Gönderen" sortBy="#{evrak.name}">
+                <h:outputText value="#{evrak.name}" />
+            </p:column>
+            <p:column headerText="Görüntüle" >
+                <p:commandButton update=":rightbar:ilceDetail" oncomplete="PF('evrakOku').show()" icon="ui-icon-search" title="View">
+                    <f:setPropertyActionListener value="#{ilce}" target="#{ilcelerView.selectedIlce}" />
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+    </p:dialog>
+    <p:dialog header="#{navigator.currentCity}" widgetVar="konuDialog" modal="true" showEffect="fade" hideEffect="fade" resizable="false" >
+        <p:dataTable id="konuDetail" var="evrak" value="#{evraklarView.seciliKonununEvraklari}" scrollable="true" style="width:800"
+        scrollHeight="500"  >
+            <p:column headerText="Tarih" sortBy="#{evrak.name}">
+                <h:outputText value="#{evrak.name}" />
+            </p:column>
+            <p:column headerText="Konu" sortBy="#{evrak.name}" >
+                <h:outputText value="#{evrak.name}" />
+            </p:column>
+            <p:column headerText="Gönderen" sortBy= "#{evrak.name}">
+                <h:outputText value="#{evrak.name}" />
+            </p:column>
+            <p:column headerText="Görüntüle" >
+                <p:commandButton update=":rightbar:ilceDetail" oncomplete="PF('evrakOku').show()" icon="ui-icon-search" title="View">
+                    <f:setPropertyActionListener value="#{ilce}" target="#{ilcelerView.selectedIlce}" />
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+    </p:dialog>
+
+    <p:dialog id="evrakOku" widgetVar="evrakOku">
+        <object type="application/pdf" data="resources/guide.pdf?pfdrid_c=true" height="700px" width="1000px" >
+            Your browser can't display pdf, <a href="resources/guide.pdf">click</a> to download pdf instead.
+        </object>
+    </p:dialog>
+
+   </h:form>
+
+</body>
+
+</html>
